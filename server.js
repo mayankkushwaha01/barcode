@@ -16,8 +16,7 @@ const db = mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'attendance_system',
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    database: process.env.DB_NAME || 'attendance_system'
 });
 
 // Connect to MySQL

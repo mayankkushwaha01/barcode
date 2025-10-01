@@ -19,8 +19,6 @@ A complete college attendance management system using Node.js backend with MySQL
 
 ## Setup Instructions
 
-### Local Development
-
 1. **Install Dependencies**
 ```bash
 npm install
@@ -38,30 +36,6 @@ npm start
 
 4. **Access Application**
 Open browser and go to: `http://localhost:3000`
-
-### Vercel Deployment
-
-1. **Install Vercel CLI**
-```bash
-npm i -g vercel
-```
-
-2. **Setup Environment Variables**
-- Copy `.env.example` to `.env`
-- Update with your MySQL database credentials
-- Add environment variables in Vercel dashboard
-
-3. **Deploy to Vercel**
-```bash
-vercel --prod
-```
-
-**Required Environment Variables for Vercel:**
-- `DB_HOST` - MySQL host
-- `DB_USER` - MySQL username
-- `DB_PASSWORD` - MySQL password
-- `DB_NAME` - Database name (attendance_system)
-- `NODE_ENV` - production
 
 ## Database Schema
 
