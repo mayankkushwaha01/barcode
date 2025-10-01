@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Barcode Attendance System</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest/umd/index.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 College Barcode Attendance System</h1>
+            <p>Smart ID Card Based Attendance Management</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('idcard')">🆔 ID Card Generator</button>
+            <button class="tab" onclick="showTab('scanner')">📱 Barcode Scanner</button>
+            <button class="tab" onclick="showTab('teacher')">👨🏫 Teacher Portal</button>
+        </div>
+        
+        <!-- ID Card Generator Tab -->
+        <div id="idcard-tab" class="tab-content">
+            <h2>Student ID Card Generator</h2>
+            
+            <div class="form-group">
+                <label>Select Student:</label>
+                <select id="studentSelect" onchange="generateIDCard()">
+                    <option value="">Select a student</option>
+                </select>
+            </div>
+            
+            <div id="idCardContainer"></div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="printIDCard()">🖨️ Print ID Card</button>
+            </div>
+        </div>
+        
+        <!-- Scanner Tab -->
+        <div id="scanner-tab" class="tab-content hidden">
+            <h2>Barcode Scanner for Attendance</h2>
+            
+            <div class="scanner-container">
+                <video id="scannerVideo" class="scanner-video" autoplay></video>
+                <canvas id="scannerCanvas" class="hidden"></canvas>
+                
+                <div style="margin: 20px 0;">
+                    <button class="btn" onclick="startScanner()">📷 Start Scanner</button>
+                    <button class="btn btn-danger" onclick="stopScanner()">⏹️ Stop Scanner</button>
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="scanFromImage()">
+                    <button class="btn btn-success" onclick="document.getElementById('imageUpload').click()">🖼️ Scan from Gallery</button>
+                </div>
+                
+                <div id="scanResult"></div>
+            </div>
+        </div>
+        
+        <!-- Teacher Portal Tab -->
+        <div id="teacher-tab" class="tab-content hidden">
+            <h2>📊 Teacher Portal - Statistics Dashboard</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-number" id="totalStudents">5</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-number" id="presentStudents">0</div>
+                    <div class="stat-label">Present Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-number" id="absentStudents">5</div>
+                    <div class="stat-label">Absent Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-number" id="attendanceRate">0%</div>
+                    <div class="stat-label">Attendance Rate</div>
+                </div>
+            </div>
+            
+            <div class="portal-actions">
+                <h3>Quick Actions</h3>
+                <div class="form-group">
+                    <label>Mark Manual Attendance:</label>
+                    <select id="manualStudentSelect">
+                        <option value="">Select a student</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="markManualAttendance()">✓ Mark Present</button>
+                <button class="btn btn-danger" onclick="exportToExcel()">📊 Export to Excel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
