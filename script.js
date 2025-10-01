@@ -92,44 +92,36 @@ async function startScanner() {
     
     try {
         scanning = true;
-        codeReader = new ZXing.BrowserMultiFormatReader();
+        const videoElement = document.getElementById('scannerVideo');
         
-        // Start video stream
+        // Get camera stream
         stream = await navigator.mediaDevices.getUserMedia({ 
             video: { 
-                facingMode: 'environment',
-                width: { ideal: 640 },
-                height: { ideal: 480 }
+                facingMode: 'environment'
             } 
         });
         
-        const videoElement = document.getElementById('scannerVideo');
         videoElement.srcObject = stream;
         
-        // Continuous scanning
-        const scanLoop = async () => {
-            if (!scanning) return;
-            
-            try {
-                const result = await codeReader.decodeOnceFromVideoDevice(undefined, 'scannerVideo');
-                if (result && scanning) {
-                    processBarcode(result.text);
-                    // Continue scanning after a short delay
-                    setTimeout(scanLoop, 2000);
-                }
-            } catch (err) {
-                if (scanning) {
-                    setTimeout(scanLoop, 500);
-                }
-            }
-        };
+        // Wait for video to load
+        await new Promise(resolve => {
+            videoElement.onloadedmetadata = resolve;
+        });
         
-        scanLoop();
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        
+        // Start continuous scanning
+        codeReader.decodeFromVideoDevice(null, 'scannerVideo', (result, err) => {
+            if (result && scanning) {
+                processBarcode(result.text);
+            }
+        });
+        
         document.getElementById('scanResult').innerHTML = '<div class="success">Scanner started. Point camera at barcode.</div>';
         
     } catch (err) {
         scanning = false;
-        document.getElementById('scanResult').innerHTML = '<div class="error">Camera access denied or not available</div>';
+        document.getElementById('scanResult').innerHTML = '<div class="error">Camera access denied: ' + err.message + '</div>';
     }
 }
 
@@ -162,9 +154,18 @@ function scanFromImage() {
     reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
+            const canvas = document.getElementById('scannerCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
             try {
                 const codeReader = new ZXing.BrowserMultiFormatReader();
-                codeReader.decodeFromImageElement(img)
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                codeReader.decodeFromImageData(imageData)
                     .then(result => {
                         processBarcode(result.text);
                     })
