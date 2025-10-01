@@ -11,7 +11,32 @@
     <script src="database.js"></script>
 </head>
 <body>
-    <div class="container">
+    <!-- Cover Page -->
+    <div class="cover-page" id="coverPage">
+        <div class="cover-content">
+            <div class="logo-animation">
+                <div class="barcode-lines">
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                </div>
+                <h1 class="cover-title">🎓 College Barcode Attendance</h1>
+                <p class="cover-subtitle">Smart ID Card Based Attendance Management</p>
+            </div>
+            <div class="features-preview">
+                <div class="feature-item">📝 Student Registration</div>
+                <div class="feature-item">🆔 ID Card Generation</div>
+                <div class="feature-item">📱 Barcode Scanning</div>
+                <div class="feature-item">📊 Teacher Dashboard</div>
+            </div>
+            <button class="enter-btn" onclick="enterPortal()">Let's Go →</button>
+        </div>
+    </div>
+    
+    <!-- Main Application -->
+    <div class="container" id="mainApp" style="display: none;">
         <div class="header">
             <h1>🎓 College Barcode Attendance System</h1>
             <p>Smart ID Card Based Attendance Management</p>

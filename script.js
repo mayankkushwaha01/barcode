@@ -55,6 +55,26 @@ function registerStudent() {
     }
 }
 
+// Cover Page Transition
+function enterPortal() {
+    const coverPage = document.getElementById('coverPage');
+    const mainApp = document.getElementById('mainApp');
+    
+    // Exit animation for cover page
+    coverPage.style.animation = 'coverExit 0.8s ease-in-out forwards';
+    
+    setTimeout(() => {
+        coverPage.style.display = 'none';
+        mainApp.style.display = 'block';
+        mainApp.style.animation = 'appEnter 0.8s ease-out forwards';
+        
+        // Initialize app after entrance
+        setTimeout(async () => {
+            await initializeApp();
+        }, 500);
+    }, 800);
+}
+
 // Mobile Menu Toggle
 function toggleMenu() {
     const menuToggle = document.querySelector('.menu-toggle');
@@ -334,7 +354,17 @@ function showStudentDetails() {
     }
     
     const student = students[studentId];
-    const attendanceCount = attendanceRecords.filter(record => record.studentId === studentId).length;
+    if (!student) {
+        container.innerHTML = '<div class="error">Student not found</div>';
+        return;
+    }
+    
+    let attendanceCount = 0;
+    if (dbInitialized) {
+        attendanceCount = DatabaseOps.getStudentAttendanceCount(studentId);
+    } else {
+        attendanceCount = attendanceRecords.filter(record => record.studentId === studentId).length;
+    }
     
     container.innerHTML = `
         <div class="student-card">
@@ -422,10 +452,18 @@ function populateDropdowns() {
 function updateAttendanceHistory() {
     const container = document.getElementById('attendanceHistoryContainer');
     
-    // Sort records by timestamp (newest first)
-    const sortedRecords = attendanceRecords
-        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-        .slice(0, 10); // Show last 10 records
+    if (!container) return;
+    
+    let records = [];
+    if (dbInitialized) {
+        records = DatabaseOps.getAttendanceRecords().slice(0, 10);
+    } else {
+        records = attendanceRecords
+            .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+            .slice(0, 10);
+    }
+    
+    const sortedRecords = records;
     
     if (sortedRecords.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #7f8c8d;">No attendance records yet.</p>';
@@ -452,19 +490,23 @@ function updateAttendanceHistory() {
 function loadStudentsFromDB() {
     if (dbInitialized) {
         students = DatabaseOps.getAllStudents();
+        console.log('Loaded students from DB:', Object.keys(students).length);
     }
 }
 
 function loadAttendanceFromDB() {
     if (dbInitialized) {
         attendanceRecords = DatabaseOps.getAttendanceRecords();
+        console.log('Loaded attendance records from DB:', attendanceRecords.length);
     }
 }
 
-// Initialize dashboard on page load
-document.addEventListener('DOMContentLoaded', async function() {
-    // Initialize database
-    dbInitialized = await initDatabase();
+// Initialize database when entering portal
+async function initializeApp() {
+    if (!dbInitialized) {
+        dbInitialized = await initDatabase();
+        console.log('Database initialized:', dbInitialized);
+    }
     
     if (dbInitialized) {
         loadStudentsFromDB();
@@ -472,9 +514,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         populateDropdowns();
         updateDashboard();
         updateAttendanceHistory();
-        console.log('Application initialized with database');
+        console.log('Application data loaded');
     } else {
-        console.error('Failed to initialize database');
-        alert('Database initialization failed. Some features may not work.');
+        console.error('Database initialization failed');
     }
+}
+
+// Initialize dashboard on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Don't initialize database on cover page
+    console.log('Page loaded - waiting for user to enter portal');
 });
