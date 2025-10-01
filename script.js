@@ -1,16 +1,59 @@
-// Student Database
-const students = {
-    'STU001': { name: 'Mayank Kushwaha', course: 'BCA 3rd Year', photo: 'MK' },
-    'STU002': { name: 'Rahul Sharma', course: 'BCA 2nd Year', photo: 'RS' },
-    'STU003': { name: 'Priya Singh', course: 'BCA 1st Year', photo: 'PS' },
-    'STU004': { name: 'Amit Kumar', course: 'BCA 3rd Year', photo: 'AK' },
-    'STU005': { name: 'Sneha Patel', course: 'BCA 2nd Year', photo: 'SP' }
-};
-
+// Database variables
+let students = {};
 let attendanceRecords = [];
 let codeReader = null;
 let stream = null;
 let scanning = false;
+let studentCounter = 6;
+let dbInitialized = false;
+
+// Student Registration
+function registerStudent() {
+    if (!dbInitialized) {
+        document.getElementById('registrationResult').innerHTML = 
+            '<div class="error">Database not initialized. Please wait...</div>';
+        return;
+    }
+    
+    const name = document.getElementById('studentName').value.trim();
+    const course = document.getElementById('studentCourse').value;
+    const roll = document.getElementById('rollNumber').value.trim();
+    const phone = document.getElementById('phoneNumber').value.trim();
+    const email = document.getElementById('studentEmail').value.trim();
+    
+    if (!name || !course || !roll || !phone || !email) {
+        document.getElementById('registrationResult').innerHTML = 
+            '<div class="error">Please fill all fields!</div>';
+        return;
+    }
+    
+    const studentId = 'STU' + String(studentCounter).padStart(3, '0');
+    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+    
+    const success = DatabaseOps.addStudent(studentId, name, course, roll, phone, email, initials);
+    
+    if (success) {
+        studentCounter++;
+        document.getElementById('registrationResult').innerHTML = 
+            `<div class="success">✅ Student registered successfully! ID: ${studentId}</div>`;
+        
+        // Clear form
+        document.getElementById('studentName').value = '';
+        document.getElementById('studentCourse').value = '';
+        document.getElementById('rollNumber').value = '';
+        document.getElementById('phoneNumber').value = '';
+        document.getElementById('studentEmail').value = '';
+        
+        // Refresh data
+        loadStudentsFromDB();
+        loadAttendanceFromDB();
+        populateDropdowns();
+        updateDashboard();
+    } else {
+        document.getElementById('registrationResult').innerHTML = 
+            '<div class="error">Failed to register student!</div>';
+    }
+}
 
 // Tab Management
 function showTab(tabName) {
@@ -190,35 +233,33 @@ function processBarcode(studentId) {
 }
 
 function markAttendance(studentId) {
-    const student = students[studentId];
-    const now = new Date();
-    const timeString = now.toLocaleTimeString();
-    
-    // Check if already marked today
-    const today = now.toDateString();
-    const existingRecord = attendanceRecords.find(record => 
-        record.studentId === studentId && record.date === today
-    );
-    
-    if (existingRecord) {
+    if (!dbInitialized || !students[studentId]) {
         document.getElementById('scanResult').innerHTML = 
-            `<div class="error">Attendance already marked for ${student.name} today at ${existingRecord.time}</div>`;
+            '<div class="error">Invalid student ID or database not ready!</div>';
         return;
     }
     
-    // Add attendance record
-    attendanceRecords.push({
-        studentId: studentId,
-        name: student.name,
-        course: student.course,
-        time: timeString,
-        date: today
-    });
+    const student = students[studentId];
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    const dateString = now.toLocaleDateString();
+    const fullDateTime = now.toLocaleString();
+    const today = now.toDateString();
     
-    document.getElementById('scanResult').innerHTML = 
-        `<div class="success">✅ Attendance marked for ${student.name} at ${timeString}</div>`;
+    const result = DatabaseOps.markAttendance(studentId, today, timeString, fullDateTime, now.getTime());
     
-    updateDashboard();
+    if (result.success) {
+        document.getElementById('scanResult').innerHTML = 
+            `<div class="success">✅ Attendance marked for ${student.name} at ${fullDateTime}</div>`;
+        
+        // Refresh data
+        loadAttendanceFromDB();
+        updateDashboard();
+        updateAttendanceHistory();
+    } else {
+        document.getElementById('scanResult').innerHTML = 
+            `<div class="error">${result.message || 'Failed to mark attendance'}</div>`;
+    }
 }
 
 // Teacher Portal Functions
@@ -265,22 +306,158 @@ function exportToExcel() {
     window.URL.revokeObjectURL(url);
 }
 
+// Show Student Details
+function showStudentDetails() {
+    const studentId = document.getElementById('detailStudentSelect').value;
+    const container = document.getElementById('studentDetailsContainer');
+    
+    if (!studentId) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    const student = students[studentId];
+    const attendanceCount = attendanceRecords.filter(record => record.studentId === studentId).length;
+    
+    container.innerHTML = `
+        <div class="student-card">
+            <div class="student-info-grid">
+                <div class="info-item">
+                    <div class="info-label">Student ID</div>
+                    <div class="info-value">${studentId}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Name</div>
+                    <div class="info-value">${student.name}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Course</div>
+                    <div class="info-value">${student.course}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Roll Number</div>
+                    <div class="info-value">${student.roll || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value">${student.phone || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">${student.email || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Total Attendance</div>
+                    <div class="info-value">${attendanceCount} days</div>
+                </div>
+            </div>
+            <button class="btn btn-danger" onclick="deleteStudent('${studentId}')">🗑️ Delete Student</button>
+        </div>
+    `;
+}
+
+// Delete Student
+function deleteStudent(studentId) {
+    if (!dbInitialized) return;
+    
+    if (confirm(`Are you sure you want to delete ${students[studentId].name}?`)) {
+        const success = DatabaseOps.deleteStudent(studentId);
+        
+        if (success) {
+            // Refresh data
+            loadStudentsFromDB();
+            loadAttendanceFromDB();
+            populateDropdowns();
+            updateDashboard();
+            document.getElementById('studentDetailsContainer').innerHTML = '';
+            document.getElementById('detailStudentSelect').value = '';
+            
+            alert('Student deleted successfully!');
+        } else {
+            alert('Failed to delete student!');
+        }
+    }
+}
+
 // Populate dropdowns
 function populateDropdowns() {
     const studentSelect = document.getElementById('studentSelect');
     const manualSelect = document.getElementById('manualStudentSelect');
+    const detailSelect = document.getElementById('detailStudentSelect');
+    
+    // Clear existing options except first
+    studentSelect.innerHTML = '<option value="">Select a student</option>';
+    manualSelect.innerHTML = '<option value="">Select a student</option>';
+    detailSelect.innerHTML = '<option value="">Select a student</option>';
     
     Object.keys(students).forEach(id => {
         const student = students[id];
         const option1 = new Option(`${student.name} - ${student.course}`, id);
         const option2 = new Option(`${student.name} - ${student.course}`, id);
+        const option3 = new Option(`${student.name} - ${student.course}`, id);
         studentSelect.add(option1);
         manualSelect.add(option2);
+        detailSelect.add(option3);
     });
 }
 
+// Update Attendance History
+function updateAttendanceHistory() {
+    const container = document.getElementById('attendanceHistoryContainer');
+    
+    // Sort records by timestamp (newest first)
+    const sortedRecords = attendanceRecords
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+        .slice(0, 10); // Show last 10 records
+    
+    if (sortedRecords.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #7f8c8d;">No attendance records yet.</p>';
+        return;
+    }
+    
+    container.innerHTML = sortedRecords.map(record => `
+        <div class="attendance-record">
+            <div class="record-info">
+                <div>
+                    <div class="record-student">${record.name}</div>
+                    <div class="record-course">${record.course} (${record.studentId})</div>
+                </div>
+            </div>
+            <div class="record-datetime">
+                <div class="record-date">${record.dateString || record.date}</div>
+                <div class="record-time">${record.time}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Load data from database
+function loadStudentsFromDB() {
+    if (dbInitialized) {
+        students = DatabaseOps.getAllStudents();
+    }
+}
+
+function loadAttendanceFromDB() {
+    if (dbInitialized) {
+        attendanceRecords = DatabaseOps.getAttendanceRecords();
+    }
+}
+
 // Initialize dashboard on page load
-document.addEventListener('DOMContentLoaded', function() {
-    populateDropdowns();
-    updateDashboard();
+document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize database
+    dbInitialized = await initDatabase();
+    
+    if (dbInitialized) {
+        loadStudentsFromDB();
+        loadAttendanceFromDB();
+        populateDropdowns();
+        updateDashboard();
+        updateAttendanceHistory();
+        console.log('Application initialized with database');
+    } else {
+        console.error('Failed to initialize database');
+        alert('Database initialization failed. Some features may not work.');
+    }
 });
