@@ -17,11 +17,18 @@
             <p>Smart ID Card Based Attendance Management</p>
         </div>
         
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('register')">📝 Student Registration</button>
-            <button class="tab" onclick="showTab('idcard')">🆔 ID Card Generator</button>
-            <button class="tab" onclick="showTab('scanner')">📱 Barcode Scanner</button>
-            <button class="tab" onclick="showTab('teacher')">👨🏫 Teacher Portal</button>
+        <div class="nav-container">
+            <button class="menu-toggle" onclick="toggleMenu()">
+                <span class="hamburger"></span>
+                <span class="hamburger"></span>
+                <span class="hamburger"></span>
+            </button>
+            <div class="tabs" id="navTabs">
+                <button class="tab active" onclick="showTab('register')">📝 Student Registration</button>
+                <button class="tab" onclick="showTab('idcard')">🆔 ID Card Generator</button>
+                <button class="tab" onclick="showTab('scanner')">📱 Barcode Scanner</button>
+                <button class="tab" onclick="showTab('teacher')">👨🏫 Teacher Portal</button>
+            </div>
         </div>
         
         <!-- Student Registration Tab -->

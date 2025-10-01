@@ -81,11 +81,56 @@ body::before {
     100% { text-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 30px rgba(255,255,255,0.4); }
 }
 
+.nav-container {
+    position: relative;
+    background: linear-gradient(90deg, #34495e, #2c3e50, #34495e);
+    min-height: 60px;
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1001;
+}
+
+.hamburger {
+    width: 25px;
+    height: 3px;
+    background: white;
+    margin: 3px 0;
+    transition: 0.3s;
+    border-radius: 2px;
+    display: block;
+}
+
+.menu-toggle.active .hamburger:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.menu-toggle.active .hamburger:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-toggle.active .hamburger:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+
 .tabs {
     display: flex;
-    background: linear-gradient(90deg, #34495e, #2c3e50, #34495e);
+    background: transparent;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .tabs::before {
@@ -308,6 +353,114 @@ body::before {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
+}
+
+/* Touch and Mobile Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .stat-card:hover {
+        transform: translateY(-5px) scale(1.02);
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .tab:hover {
+        background: rgba(255,255,255,0.05);
+        transform: none;
+    }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .barcode-section svg {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .header {
+        padding: 10px 15px;
+    }
+    
+    .header h1 {
+        font-size: 1.4rem;
+    }
+    
+    .tab-content {
+        padding: 15px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+    
+    .stat-card {
+        padding: 15px 10px;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.3rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+    
+    .container {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .tabs,
+    .btn,
+    .scanner-container {
+        display: none;
+    }
+    
+    .id-card {
+        break-inside: avoid;
+        margin: 20px 0;
+    }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .form-group input,
+    .form-group select {
+        background: rgba(255,255,255,0.95);
+        color: #333;
+    }
+    
+    .success {
+        background: linear-gradient(135deg, #1e4d3a 0%, #2d5a3d 100%);
+        color: #a8e6a3;
+    }
+    
+    .error {
+        background: linear-gradient(135deg, #4d1e1e 0%, #5a2d2d 100%);
+        color: #f5a3a3;
+    }
 }
 
 /* Teacher Portal Styles */
@@ -668,17 +821,87 @@ body::before {
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
-/* Responsive Design */
+/* Enhanced Responsive Design */
+@media (max-width: 1200px) {
+    .container { max-width: 95%; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 992px) {
+    .header h1 { font-size: 2rem; }
+    .tab-content { padding: 25px; }
+    .registration-form { padding: 25px; }
+    .scanner-container { padding: 25px; }
+}
+
 @media (max-width: 768px) {
     body { padding: 10px; }
     
-    .container { border-radius: 10px; }
+    .container { 
+        border-radius: 10px;
+        margin: 10px auto;
+    }
     
-    .header { padding: 15px; }
-    .header h1 { font-size: 1.5rem; }
+    .header { 
+        padding: 20px 15px;
+        text-align: center;
+    }
+    .header h1 { 
+        font-size: 1.8rem;
+        margin-bottom: 5px;
+    }
+    .header p { font-size: 0.9rem; }
     
-    .tabs { flex-direction: column; }
-    .tab { padding: 12px; }
+    .menu-toggle {
+        display: flex !important;
+    }
+    
+    .tabs { 
+        flex-direction: column;
+        background: linear-gradient(180deg, #34495e, #2c3e50);
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        border-radius: 0 0 10px 10px;
+    }
+    
+    .tabs.active {
+        max-height: 300px;
+        overflow: visible;
+    }
+    
+    .tab { 
+        padding: 15px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        width: 100%;
+        opacity: 0;
+        transform: translateY(-10px);
+        animation: slideIn 0.3s ease forwards;
+    }
+    
+    .tabs.active .tab {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .tab:nth-child(1) { animation-delay: 0.1s; }
+    .tab:nth-child(2) { animation-delay: 0.2s; }
+    .tab:nth-child(3) { animation-delay: 0.3s; }
+    .tab:nth-child(4) { animation-delay: 0.4s; }
+    
+    @keyframes slideIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
     
     .tab-content { padding: 20px; }
     
@@ -687,16 +910,39 @@ body::before {
         gap: 15px;
     }
     
-    .stat-card { padding: 20px 15px; }
-    .stat-number { font-size: 2rem; }
+    .stat-card { 
+        padding: 20px 15px;
+        border-radius: 15px;
+    }
+    .stat-number { font-size: 2.2rem; }
     .stat-icon { font-size: 2rem; }
+    .stat-label { font-size: 0.95rem; }
     
-    .scanner-video { max-width: 100%; }
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .registration-form {
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .scanner-container {
+        padding: 20px;
+        margin: 0;
+    }
+    
+    .scanner-video { 
+        max-width: 100%;
+        border-radius: 10px;
+    }
     
     .btn { 
-        padding: 10px 20px;
+        padding: 12px 20px;
         font-size: 14px;
-        margin: 5px;
+        margin: 8px 5px;
+        min-width: 120px;
     }
     
     .id-card {
@@ -704,35 +950,159 @@ body::before {
         max-width: 320px;
         height: auto;
         padding: 15px;
+        margin: 15px auto;
+    }
+    
+    .portal-actions,
+    .student-details-section,
+    .attendance-history-section {
+        padding: 20px;
+        margin-top: 15px;
+    }
+    
+    .student-info-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
 }
 
 @media (max-width: 480px) {
-    .stats-grid { 
-        grid-template-columns: 1fr;
-        gap: 10px;
+    body { padding: 5px; }
+    
+    .header {
+        padding: 15px 10px;
+    }
+    .header h1 { 
+        font-size: 1.5rem;
+        line-height: 1.2;
     }
     
-    .stat-card { padding: 15px 10px; }
-    .stat-number { font-size: 1.8rem; }
-    .stat-label { font-size: 0.9rem; }
+    .menu-toggle {
+        display: flex !important;
+        width: 50px;
+        height: 50px;
+        padding: 10px;
+    }
     
-    .portal-actions { padding: 20px; }
+    .hamburger {
+        width: 20px;
+        height: 2px;
+    }
+    
+    .tab {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .tabs {
+        top: 50px;
+    }
+    
+    .tab-content { padding: 15px; }
+    
+    .stats-grid { 
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .stat-card { 
+        padding: 18px 12px;
+        border-radius: 12px;
+    }
+    .stat-number { font-size: 2rem; }
+    .stat-icon { font-size: 1.8rem; }
+    .stat-label { 
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .registration-form,
+    .portal-actions,
+    .student-details-section,
+    .attendance-history-section {
+        padding: 15px;
+        border-radius: 15px;
+    }
+    
+    .scanner-container {
+        padding: 15px;
+    }
     
     .btn { 
         width: 100%;
-        margin: 5px 0;
+        margin: 8px 0;
+        padding: 14px;
+        font-size: 15px;
+        border-radius: 8px;
     }
     
     .id-card {
         width: 100%;
         max-width: 280px;
         padding: 12px;
+        border-radius: 12px;
     }
     
     .student-photo {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
     }
+    
+    .student-details h3 {
+        font-size: 14px;
+    }
+    
+    .student-details p {
+        font-size: 11px;
+    }
+    
+    .college-name {
+        font-size: 12px;
+    }
+    
+    .form-group input,
+    .form-group select {
+        padding: 12px;
+        font-size: 15px;
+        border-radius: 8px;
+    }
+    
+    .form-group label {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    
+    .attendance-record {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 15px;
+    }
+    
+    .record-datetime {
+        text-align: left;
+        width: 100%;
+    }
+    
+    .info-item {
+        padding: 8px;
+        border-radius: 6px;
+    }
+    
+    .info-label {
+        font-size: 0.8rem;
+    }
+    
+    .info-value {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 320px) {
+    .header h1 { font-size: 1.3rem; }
+    .tab { font-size: 12px; }
+    .stat-number { font-size: 1.8rem; }
+    .btn { font-size: 14px; }
+    .id-card { max-width: 260px; }
 }

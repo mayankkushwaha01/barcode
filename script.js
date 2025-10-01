@@ -55,6 +55,15 @@ function registerStudent() {
     }
 }
 
+// Mobile Menu Toggle
+function toggleMenu() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navTabs = document.getElementById('navTabs');
+    
+    menuToggle.classList.toggle('active');
+    navTabs.classList.toggle('active');
+}
+
 // Tab Management
 function showTab(tabName) {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -62,6 +71,14 @@ function showTab(tabName) {
     
     event.target.classList.add('active');
     document.getElementById(tabName + '-tab').classList.remove('hidden');
+    
+    // Close mobile menu after selection
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navTabs = document.getElementById('navTabs');
+    if (menuToggle && navTabs.classList.contains('active')) {
+        menuToggle.classList.remove('active');
+        navTabs.classList.remove('active');
+    }
     
     if (tabName === 'teacher') {
         updateDashboard();
