@@ -1,5 +1,7 @@
 // API Client for MySQL Backend
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api' 
+    : '/api';
 
 // Database Operations with MySQL Backend
 const DatabaseOps = {
