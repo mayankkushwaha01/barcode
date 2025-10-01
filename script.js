@@ -75,6 +75,29 @@ function enterPortal() {
     }, 800);
 }
 
+// Toggle Registration Form
+function toggleRegistrationForm() {
+    const form = document.getElementById('registrationForm');
+    const toggleBtn = document.querySelector('.action-btn');
+    const icon = document.getElementById('toggleIcon');
+    
+    if (form.style.display === 'none' || !form.classList.contains('show')) {
+        form.style.display = 'block';
+        setTimeout(() => {
+            form.classList.add('show');
+        }, 10);
+        toggleBtn.classList.add('active');
+        icon.textContent = '▼';
+    } else {
+        form.classList.remove('show');
+        toggleBtn.classList.remove('active');
+        icon.textContent = '▶';
+        setTimeout(() => {
+            form.style.display = 'none';
+        }, 500);
+    }
+}
+
 // Mobile Menu Toggle
 function toggleMenu() {
     const menuToggle = document.querySelector('.menu-toggle');
