@@ -7,14 +7,86 @@ let scanning = false;
 let studentCounter = 6;
 let dbInitialized = false;
 
-// Student Registration
-function registerStudent() {
-    if (!dbInitialized) {
-        document.getElementById('registrationResult').innerHTML = 
-            '<div class="error">Database not initialized. Please wait...</div>';
-        return;
-    }
+// API Functions
+const API = {
+    async addStudent(id, name, course, roll, phone, email, photo) {
+        try {
+            const response = await fetch('/api/students', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, name, course, roll, phone, email, photo })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error adding student:', error);
+            return { success: false };
+        }
+    },
     
+    async getAllStudents() {
+        try {
+            const response = await fetch('/api/students');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching students:', error);
+            return [];
+        }
+    },
+    
+    async deleteStudent(id) {
+        try {
+            const response = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+            return await response.json();
+        } catch (error) {
+            console.error('Error deleting student:', error);
+            return { success: false };
+        }
+    },
+    
+    async markAttendance(studentId, date, time, fullDateTime, timestamp) {
+        try {
+            const response = await fetch('/api/attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    student_id: studentId, 
+                    date: new Date().toISOString().split('T')[0],
+                    time: new Date().toTimeString().split(' ')[0],
+                    full_datetime: new Date().toISOString().replace('T', ' ').split('.')[0],
+                    timestamp: Date.now()
+                })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error marking attendance:', error);
+            return { success: false };
+        }
+    },
+    
+    async getAttendanceRecords() {
+        try {
+            const response = await fetch('/api/attendance');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching attendance:', error);
+            return [];
+        }
+    },
+    
+    async getStudentAttendanceCount(studentId) {
+        try {
+            const response = await fetch(`/api/attendance/count/${studentId}`);
+            const data = await response.json();
+            return data.count || 0;
+        } catch (error) {
+            console.error('Error fetching attendance count:', error);
+            return 0;
+        }
+    }
+};
+
+// Student Registration
+async function registerStudent() {
     const name = document.getElementById('studentName').value.trim();
     const course = document.getElementById('studentCourse').value;
     const roll = document.getElementById('rollNumber').value.trim();
@@ -27,15 +99,14 @@ function registerStudent() {
         return;
     }
     
-    const studentId = 'STU' + String(studentCounter).padStart(3, '0');
+    const studentId = roll; // Use roll number as student ID
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
     
-    const success = DatabaseOps.addStudent(studentId, name, course, roll, phone, email, initials);
+    const result = await SupabaseAPI.addStudent(studentId, name, course, roll, phone, email, initials);
     
-    if (success) {
-        studentCounter++;
+    if (result.success) {
         document.getElementById('registrationResult').innerHTML = 
-            `<div class="success">✅ Student registered successfully! ID: ${studentId}</div>`;
+            `<div class="success">✅ Student registered successfully! Student ID: ${roll}</div>`;
         
         // Clear form
         document.getElementById('studentName').value = '';
@@ -45,8 +116,8 @@ function registerStudent() {
         document.getElementById('studentEmail').value = '';
         
         // Refresh data
-        loadStudentsFromDB();
-        loadAttendanceFromDB();
+        await loadStudentsFromDB();
+        await loadAttendanceFromDB();
         populateDropdowns();
         updateDashboard();
     } else {
@@ -292,28 +363,25 @@ function processBarcode(studentId) {
     }
 }
 
-function markAttendance(studentId) {
-    if (!dbInitialized || !students[studentId]) {
+async function markAttendance(studentId) {
+    if (!students[studentId]) {
         document.getElementById('scanResult').innerHTML = 
-            '<div class="error">Invalid student ID or database not ready!</div>';
+            '<div class="error">Invalid student ID!</div>';
         return;
     }
     
     const student = students[studentId];
     const now = new Date();
-    const timeString = now.toLocaleTimeString();
-    const dateString = now.toLocaleDateString();
     const fullDateTime = now.toLocaleString();
-    const today = now.toDateString();
     
-    const result = DatabaseOps.markAttendance(studentId, today, timeString, fullDateTime, now.getTime());
+    const result = await SupabaseAPI.markAttendance(studentId);
     
     if (result.success) {
         document.getElementById('scanResult').innerHTML = 
             `<div class="success">✅ Attendance marked for ${student.name} at ${fullDateTime}</div>`;
         
         // Refresh data
-        loadAttendanceFromDB();
+        await loadAttendanceFromDB();
         updateDashboard();
         updateAttendanceHistory();
     } else {
@@ -367,7 +435,7 @@ function exportToExcel() {
 }
 
 // Show Student Details
-function showStudentDetails() {
+async function showStudentDetails() {
     const studentId = document.getElementById('detailStudentSelect').value;
     const container = document.getElementById('studentDetailsContainer');
     
@@ -382,12 +450,7 @@ function showStudentDetails() {
         return;
     }
     
-    let attendanceCount = 0;
-    if (dbInitialized) {
-        attendanceCount = DatabaseOps.getStudentAttendanceCount(studentId);
-    } else {
-        attendanceCount = attendanceRecords.filter(record => record.studentId === studentId).length;
-    }
+    const attendanceCount = await SupabaseAPI.getStudentAttendanceCount(studentId);
     
     container.innerHTML = `
         <div class="student-card">
@@ -427,16 +490,14 @@ function showStudentDetails() {
 }
 
 // Delete Student
-function deleteStudent(studentId) {
-    if (!dbInitialized) return;
-    
+async function deleteStudent(studentId) {
     if (confirm(`Are you sure you want to delete ${students[studentId].name}?`)) {
-        const success = DatabaseOps.deleteStudent(studentId);
+        const result = await SupabaseAPI.deleteStudent(studentId);
         
-        if (success) {
+        if (result.success) {
             // Refresh data
-            loadStudentsFromDB();
-            loadAttendanceFromDB();
+            await loadStudentsFromDB();
+            await loadAttendanceFromDB();
             populateDropdowns();
             updateDashboard();
             document.getElementById('studentDetailsContainer').innerHTML = '';
@@ -477,16 +538,9 @@ function updateAttendanceHistory() {
     
     if (!container) return;
     
-    let records = [];
-    if (dbInitialized) {
-        records = DatabaseOps.getAttendanceRecords().slice(0, 10);
-    } else {
-        records = attendanceRecords
-            .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-            .slice(0, 10);
-    }
-    
-    const sortedRecords = records;
+    const sortedRecords = attendanceRecords
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+        .slice(0, 10);
     
     if (sortedRecords.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #7f8c8d;">No attendance records yet.</p>';
@@ -498,11 +552,11 @@ function updateAttendanceHistory() {
             <div class="record-info">
                 <div>
                     <div class="record-student">${record.name}</div>
-                    <div class="record-course">${record.course} (${record.studentId})</div>
+                    <div class="record-course">${record.course} (${record.student_id})</div>
                 </div>
             </div>
             <div class="record-datetime">
-                <div class="record-date">${record.dateString || record.date}</div>
+                <div class="record-date">${record.date}</div>
                 <div class="record-time">${record.time}</div>
             </div>
         </div>
@@ -510,36 +564,32 @@ function updateAttendanceHistory() {
 }
 
 // Load data from database
-function loadStudentsFromDB() {
-    if (dbInitialized) {
-        students = DatabaseOps.getAllStudents();
-        console.log('Loaded students from DB:', Object.keys(students).length);
-    }
+async function loadStudentsFromDB() {
+    const studentList = await SupabaseAPI.getAllStudents();
+    students = {};
+    studentList.forEach(student => {
+        students[student.id] = student;
+    });
+    console.log('Loaded students from DB:', Object.keys(students).length);
 }
 
-function loadAttendanceFromDB() {
-    if (dbInitialized) {
-        attendanceRecords = DatabaseOps.getAttendanceRecords();
-        console.log('Loaded attendance records from DB:', attendanceRecords.length);
-    }
+async function loadAttendanceFromDB() {
+    attendanceRecords = await SupabaseAPI.getAttendanceRecords();
+    console.log('Loaded attendance records from DB:', attendanceRecords.length);
 }
 
 // Initialize database when entering portal
 async function initializeApp() {
-    if (!dbInitialized) {
-        dbInitialized = await initDatabase();
-        console.log('Database initialized:', dbInitialized);
-    }
-    
-    if (dbInitialized) {
-        loadStudentsFromDB();
-        loadAttendanceFromDB();
+    try {
+        await loadStudentsFromDB();
+        await loadAttendanceFromDB();
         populateDropdowns();
         updateDashboard();
         updateAttendanceHistory();
+        dbInitialized = true;
         console.log('Application data loaded');
-    } else {
-        console.error('Database initialization failed');
+    } catch (error) {
+        console.error('Application initialization failed:', error);
     }
 }
 
