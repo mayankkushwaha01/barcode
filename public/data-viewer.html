@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Data Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .section { margin: 30px 0; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>📊 Supabase Data Viewer</h1>
+    
+    <div class="section">
+        <button onclick="loadStudents()">🔄 Refresh Students</button>
+        <button onclick="loadAttendance()">🔄 Refresh Attendance</button>
+        <button onclick="loadAll()">🔄 Load All Data</button>
+    </div>
+
+    <div class="section">
+        <h2>👥 Students Table</h2>
+        <div id="studentsResult"></div>
+        <table id="studentsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Course</th>
+                    <th>Roll</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody id="studentsBody"></tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>📅 Attendance Table</h2>
+        <div id="attendanceResult"></div>
+        <table id="attendanceTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Student ID</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://tbjnmvezrijgypwinosh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRiam5tdmV6cmlqZ3lwd2lub3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0Mjg4MTgsImV4cCI6MjA3NTAwNDgxOH0.7UYwL21s4fDrK7ekpD4GIiGy3KsIyciIgmrf4ncH2wc';
+
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function loadStudents() {
+            const resultDiv = document.getElementById('studentsResult');
+            const table = document.getElementById('studentsTable');
+            const tbody = document.getElementById('studentsBody');
+
+            resultDiv.innerHTML = 'Loading students...';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('students')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+                data.forEach(student => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${student.id}</td>
+                        <td>${student.name}</td>
+                        <td>${student.course}</td>
+                        <td>${student.roll}</td>
+                        <td>${student.phone}</td>
+                        <td>${student.email}</td>
+                        <td>${new Date(student.created_at).toLocaleString()}</td>
+                    `;
+                });
+
+                resultDiv.innerHTML = `<span class="success">✅ Loaded ${data.length} students</span>`;
+                table.style.display = 'table';
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+                table.style.display = 'none';
+            }
+        }
+
+        async function loadAttendance() {
+            const resultDiv = document.getElementById('attendanceResult');
+            const table = document.getElementById('attendanceTable');
+            const tbody = document.getElementById('attendanceBody');
+
+            resultDiv.innerHTML = 'Loading attendance...';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('attendance')
+                    .select('*')
+                    .order('timestamp', { ascending: false });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+                data.forEach(record => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${record.id}</td>
+                        <td>${record.student_id}</td>
+                        <td>${record.date}</td>
+                        <td>${record.time}</td>
+                        <td>${new Date(record.timestamp).toLocaleString()}</td>
+                    `;
+                });
+
+                resultDiv.innerHTML = `<span class="success">✅ Loaded ${data.length} attendance records</span>`;
+                table.style.display = 'table';
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+                table.style.display = 'none';
+            }
+        }
+
+        async function loadAll() {
+            await loadStudents();
+            await loadAttendance();
+        }
+
+        // Auto-load on page load
+        window.onload = loadAll;
+
+        // Auto-refresh every 10 seconds
+        setInterval(loadAll, 10000);
+    </script>
+</body>
+</html>

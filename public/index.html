@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>College Barcode Attendance System</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover-page" id="coverPage">
+        <div class="cover-content">
+            <div class="logo-animation">
+                <div class="barcode-lines">
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                </div>
+                <h1 class="cover-title">🎓 College Barcode Attendance</h1>
+                <p class="cover-subtitle">Smart ID Card Based Attendance Management</p>
+            </div>
+            <div class="features-preview">
+                <div class="feature-item">📝 Student Registration</div>
+                <div class="feature-item">🆔 ID Card Generation</div>
+                <div class="feature-item">📱 Barcode Scanning</div>
+                <div class="feature-item">📊 Teacher Dashboard</div>
+            </div>
+            <button class="enter-btn" onclick="enterPortal()">Let's Go →</button>
+        </div>
+    </div>
+    
+    <!-- Main Application -->
+    <div class="container" id="mainApp" style="display: none;">
+        <div class="header">
+            <h1>🎓 College Barcode Attendance System</h1>
+            <p>Smart ID Card Based Attendance Management</p>
+        </div>
+        
+        <div class="nav-container">
+            <button class="menu-toggle" onclick="toggleMenu()">
+                <span class="hamburger"></span>
+                <span class="hamburger"></span>
+                <span class="hamburger"></span>
+            </button>
+            <div class="tabs" id="navTabs">
+                <button class="tab active" onclick="showTab('idcard')">🆔 ID Card Generator</button>
+                <button class="tab" onclick="showTab('scanner')">📱 Barcode Scanner</button>
+                <button class="tab" onclick="showTab('teacher')">👨🏫 Teacher Portal</button>
+            </div>
+        </div>
+        
+        <!-- ID Card Generator Tab -->
+        <div id="idcard-tab" class="tab-content">
+            <h2>🆔 Student ID Card Generator</h2>
+            
+            <!-- ID Card Generation Section -->
+            <div class="id-generation-section">
+                <div class="form-group">
+                    <label>Select Student:</label>
+                    <select id="studentSelect" onchange="generateIDCard()">
+                        <option value="">Select a student</option>
+                    </select>
+                </div>
+                
+                <div id="idCardContainer"></div>
+                
+                <div class="button-center">
+                    <button class="action-btn" onclick="printIDCard()">🖨️ Print ID Card</button>
+                </div>
+            </div>
+            
+            <!-- Student Registration Section -->
+            <div class="registration-section">
+                <div class="button-center">
+                    <button class="action-btn" onclick="toggleRegistrationForm()">
+                        <span id="toggleIcon">▶</span> New Registration
+                    </button>
+                </div>
+                
+                <div class="registration-form" id="registrationForm" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Student Name:</label>
+                            <input type="text" id="studentName" placeholder="Enter full name">
+                        </div>
+                        <div class="form-group">
+                            <label>Course:</label>
+                            <select id="studentCourse">
+                                <option value="">Select course</option>
+                                <option value="BCA 1st Year">BCA 1st Year</option>
+                                <option value="BCA 2nd Year">BCA 2nd Year</option>
+                                <option value="BCA 3rd Year">BCA 3rd Year</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Student ID:</label>
+                            <input type="text" id="rollNumber" placeholder="Enter student ID">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number:</label>
+                            <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="studentEmail" placeholder="Enter email address">
+                    </div>
+                    
+                    <button class="btn" onclick="registerStudent()">✓ Register Student</button>
+                </div>
+                
+                <div id="registrationResult"></div>
+            </div>
+        </div>
+        
+        <!-- Scanner Tab -->
+        <div id="scanner-tab" class="tab-content hidden">
+            <h2>Barcode Scanner for Attendance</h2>
+            
+            <div class="scanner-container">
+                <video id="scannerVideo" class="scanner-video" autoplay></video>
+                <canvas id="scannerCanvas" class="hidden"></canvas>
+                
+                <div style="margin: 20px 0;">
+                    <button class="btn" onclick="startScanner()">📷 Start Scanner</button>
+                    <button class="btn btn-danger" onclick="stopScanner()">⏹️ Stop Scanner</button>
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="scanFromImage()">
+                    <button class="btn btn-success" onclick="document.getElementById('imageUpload').click()">🖼️ Scan from Gallery</button>
+                </div>
+                
+                <div id="scanResult"></div>
+            </div>
+        </div>
+        
+        <!-- Teacher Portal Tab -->
+        <div id="teacher-tab" class="tab-content hidden">
+            <h2>📊 Teacher Portal - Statistics Dashboard</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-number" id="totalStudents">5</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-number" id="presentStudents">0</div>
+                    <div class="stat-label">Present Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-number" id="absentStudents">5</div>
+                    <div class="stat-label">Absent Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-number" id="attendanceRate">0%</div>
+                    <div class="stat-label">Attendance Rate</div>
+                </div>
+            </div>
+            
+            <div class="portal-actions">
+                <h3>Quick Actions</h3>
+                <div class="form-group">
+                    <label>Mark Manual Attendance:</label>
+                    <select id="manualStudentSelect">
+                        <option value="">Select a student</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="markManualAttendance()">✓ Mark Present</button>
+                <button class="btn btn-danger" onclick="exportToExcel()">📊 Export to Excel</button>
+            </div>
+            
+            <div class="student-details-section">
+                <h3>👥 Student Details</h3>
+                <div class="form-group">
+                    <label>Select Student to View Details:</label>
+                    <select id="detailStudentSelect" onchange="showStudentDetails()">
+                        <option value="">Select a student</option>
+                    </select>
+                </div>
+                <div id="studentDetailsContainer"></div>
+            </div>
+            
+            <div class="attendance-history-section">
+                <h3>📅 Recent Attendance Records</h3>
+                <div id="attendanceHistoryContainer"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="supabase-client.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

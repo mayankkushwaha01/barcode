@@ -1,3 +1,12 @@
+/*.js
+  Content-Type: application/javascript
+
+/*.css
+  Content-Type: text/css
+
+/*.html
+  Content-Type: text/html
+
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
