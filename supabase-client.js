@@ -3,8 +3,14 @@ const SUPABASE_URL = 'https://tbjnmvezrijgypwinosh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRiam5tdmV6cmlqZ3lwd2lub3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0Mjg4MTgsImV4cCI6MjA3NTAwNDgxOH0.7UYwL21s4fDrK7ekpD4GIiGy3KsIyciIgmrf4ncH2wc';
 
 // Initialize Supabase client
-const { createClient } = supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabaseClient;
+try {
+    const { createClient } = supabase;
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('Supabase client initialized successfully');
+} catch (error) {
+    console.error('Failed to initialize Supabase client:', error);
+}
 
 // Database operations using Supabase client
 const SupabaseAPI = {

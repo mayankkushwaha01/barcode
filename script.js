@@ -581,6 +581,14 @@ async function loadAttendanceFromDB() {
 // Initialize database when entering portal
 async function initializeApp() {
     try {
+        // Check if SupabaseAPI is available
+        if (typeof SupabaseAPI === 'undefined') {
+            console.error('SupabaseAPI not loaded');
+            document.getElementById('registrationResult').innerHTML = 
+                '<div class="error">Database connection failed. Please refresh the page.</div>';
+            return;
+        }
+        
         await loadStudentsFromDB();
         await loadAttendanceFromDB();
         populateDropdowns();
@@ -590,6 +598,8 @@ async function initializeApp() {
         console.log('Application data loaded');
     } catch (error) {
         console.error('Application initialization failed:', error);
+        document.getElementById('registrationResult').innerHTML = 
+            '<div class="error">Failed to connect to database. Please check your internet connection.</div>';
     }
 }
 
